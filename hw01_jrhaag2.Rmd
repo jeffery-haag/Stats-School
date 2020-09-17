@@ -1,0 +1,211 @@
+---
+title: "hw01_jrhaag2"
+author: "Jeffery Haag"
+date: "9/14/2020"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Assignment
+
+## Exercise 1 (Working with Vectors)
+**(a)**
+```{r}
+x = c(1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144)
+ones = rep(1, length(x))
+mean = crossprod(x,ones)/length(x)
+```
+**(b)**
+```{r}
+z = (x - mean) 
+a <- z ^ 2
+sdDevSquared = crossprod(a,ones)/(length(a)-1)
+sdDev = sqrt(sdDevSquared)
+check = sd(x)
+print(sdDev)
+```
+## Exercise 2 (Vectors and Matrices)
+**(a)**
+```{r}
+x0 = rep(1, 30)
+x1 = (1:30) ^ 2
+x2 = seq(0, 1, length.out = 30)
+x3 = log(1:30, base = exp(1))
+set.seed(114)
+y = 5 * x0 + 1 * x1 + 6 * x2 + 3 * x3 + rnorm(n = 30, mean = 0 , sd = 1)
+report = sum(y)
+print(report)
+```
+**(b)**
+```{r}
+X = matrix(c(x0, x1, x2, x3), ncol = 4)
+XSum = sum(X)
+print(XSum)
+```
+**(c)**
+```{r}
+beta_hat = ((t(X) %*% X) ^ -1) %*% t(X) %*% y
+print((beta_hat))
+```
+**(d)**
+```{r}
+subBeta_hat = beta_hat[c(2, 3, 4), 1]
+subBeta_hat = subBeta_hat ^ 2
+sumSub = sum(subBeta_hat)
+print(sumSub)
+```
+**(e)**
+```{r}
+y_hat = X %*% beta_hat
+yRep = (y - y_hat) ^ 2
+yRep = sum(yRep)
+print(yRep)
+```
+## Exercise 3 (Discrete Probability)
+**(a)**
+```{r}
+
+probA =  dbinom(5, size=50, prob=0.12) 
+print(probA)
+```
+**(b)**
+```{r}
+
+probB =  pbinom(10, size=50, prob=0.12) 
+print(probB)
+```
+**(c)**
+```{r}
+
+probC =  pbinom(13, size=50, prob=0.12) 
+print(probC)
+```
+**(d)**
+```{r}
+
+probD =  pbinom(9, size=50, prob=0.12) - pbinom(2, size=50, prob=0.12)
+print(probD)
+```
+## Exercise 4 (Continuous Probability)
+**(a)**
+```{r}
+
+aProb = pnorm(95, mean = 120, sd = 15)
+print(aProb)
+```
+**(b)**
+```{r}
+bProb = pnorm(140, mean = 120, sd = 15, FALSE)
+print(bProb)
+```
+**(c)**
+```{r}
+not = pnorm(120, mean = 120, sd = 15, FALSE) + pnorm(95, mean = 120, sd = 15, TRUE)
+cProb = 1 - not
+print(cProb)
+```
+**(d)**
+```{r}
+dProb = qnorm(0.05, mean = 120, sd = 15)
+print(dProb)
+```
+**(e)**
+```{r}
+eProb = qnorm(0.1, mean = 120, sd = 15, FALSE)
+print(eProb)
+```
+## Exercise 5 (Packages, Plotting)
+**(a)**
+```{r}
+library(faraway)
+```
+**(b)**
+```{r}
+observations = NROW(diabetes)
+print(observations)
+variables = NCOL(diabetes)
+print(variables)
+```
+**(c)**
+```{r}
+varNames = colnames(diabetes)
+print(varNames)
+```
+**(d)**
+```{r}
+HDL_mean = mean(diabetes$hdl, na.rm = TRUE)
+
+print(HDL_mean)
+```
+**(e)**
+```{r}
+chol_sd = sd(diabetes$chol, na.rm = TRUE)
+
+print(chol_sd)
+```
+**(f)**
+```{r}
+ages = range(diabetes$age, na.rm = TRUE)
+
+print(ages)
+```
+**(g)**
+```{r}
+female_ldl = mean(subset(diabetes, gender == "female")$hdl)
+
+print(female_ldl)
+```
+**(h)**
+```{r}
+plot(hdl ~ weight, data = diabetes,
+     xlab = "Weight",
+     ylab = "HDL",
+     main = "HDL vs Weight",
+     col  = "blue")
+```
+No not really, seems to be no correleation really, possibly slight negative correllation
+**(i)**
+```{r}
+plot(chol ~ weight, data = diabetes,
+     xlab = "Weight",
+     ylab = "Cholesterol",
+     main = "Chol vs Weight",
+     col  = "red")
+```
+No not really, seems to be no correleation really
+## Exercise 6 (Importing Data, Plotting)
+
+**(a)**
+```{r}
+library(readr)
+nutrition = read_csv("nutrition.csv")
+hist(nutrition$Calories,
+     xlab = "Calories",
+     main = "Histogram of Calories",
+     border = "blue",
+     col  = "white")
+```
+The histogram slopes downward, there is a large calorie spike around the 400 mark which is weird. Also 0 is very frequent which is weird to me because food with 0 calroies is pretty worthless for energy.
+**(b)**
+```{r}
+nutrition = read_csv("nutrition.csv")
+plot(Calories ~ Protein, data = nutrition,
+     ylab = "Calories",
+     xlab = "Protein",
+     main = "Calories vs Protein",
+     col  = "black")
+```
+It has a ton of data points around the low calory area. It probably has a slightly positive correlation because there are so many poitns ar 0,0 and around it.
+**(c)** 
+```{r}
+plot(Calories ~ I(4 * Protein + 4 * Carbs + 9 * Fat + 2 * Fiber), data = nutrition,
+     xlab = "Protein",
+     ylab = "Calories",
+     main = "Calories vs Protein",
+     col  = "green")
+```
+It's pretty close to a straight line but not flat because i assume 4, 9, 2 are all rough estimates and not the exact calories from each nutritional item. I dont know much about it, but I would think some carbs are gonna be counted different then others as well.
