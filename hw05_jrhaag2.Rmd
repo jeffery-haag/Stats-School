@@ -1,0 +1,255 @@
+---
+title: "hw05_jrhaag2"
+author: "Jeffery Haag"
+date: "10/13/2020"
+output:
+  html_document:
+    theme: readable
+    toc: yes
+---
+
+## Exercise 1 (Using `lm`)
+
+**(a)**
+```{r}
+nutrition = read.csv("nutrition.csv")
+
+calor = lm(Calories ~ Carbs + Fat + Protein,data = nutrition)
+
+summary(calor)
+```
+
+
+The null hypothesis is that none are significant/ B1,B2,B3 = 0. and alternate is that at least one isnt 0.
+The test statistic is 1.524e5
+The p value is < 2.2e-16.
+We reject the null at alpha = 0.01
+At least one variable is significant predictor of calories.
+
+**(b)**
+```{r}
+nutrition = read.csv("nutrition.csv")
+
+calor = lm(Calories ~ Carbs + Fat + Protein,data = nutrition)
+
+coef(calor)
+```
+Calories = 3.768 + 3.774Carbs + 8.804Fat + 3.967Protein
+B0 = 3.768, B1 = 3.774 B2 = 8.804109, B3 = 3.6729
+For each increase of 1 in the 3 things calories is expected to rise by that ratio
+
+
+
+**(c)**
+```{r}
+data = data.frame(Carbs = 47,Fat =28,Protein = 25)
+predict(calor, newdata = data,  interval="prediction")
+```
+
+526.82 calories
+
+
+**(d)**
+```{r}
+print(sd(nutrition$Calories))
+summary(calor)
+```
+
+
+SD is 179.2444 and the Se is  18.89.
+
+**(e)**
+THe r^2 is .9889. This is extremely strong so calrories being determined by fat, protein, carbs is a good fit.
+
+
+**(f)**
+```{r}
+confint(calor, level = 0.9)
+
+```
+The intercept for B2 is 8.779 to 8.8293. With 90% certainty an increase in fat of 1 will correlate with increase of calories by that interval.
+
+
+**(g)**
+```{r}
+confint(calor, level = 0.95)
+
+```
+The intercept for B0 is 2.802779  to 4.733353
+With 99% certainty if all predictors are 0 then the amount of calories in foods will be in that range.
+
+
+**(h)**
+```{r}
+data = data.frame(Carbs = 30,Fat = 11,Protein = 2)
+predict(calor, newdata = data,  interval="prediction", level = .99)
+
+```
+
+It will be beteween 173.0697  to 270.4422 calories with 99% certainty
+ 
+
+
+**(i)**
+```{r}
+data = data.frame(Carbs = 11,Fat =1.5,Protein = 1)
+predict(calor, newdata = data,  interval="prediction", level = 0.9)
+
+```
+It will be between 31.3649 to 93.53739 calories with 90% certainty
+
+
+
+## Exercise 2 (More `lm`)
+
+**(a)**
+```{r}
+calor2 = lm(Calories ~ Carbs + Sodium + Fat + Protein,data = nutrition)
+
+summary(calor2)
+
+```
+The null hypothesis is that none are significant/ B1,B2,B3,B4 = 0. Alternate is at lest one isn't 0
+The test statistic is 1.144e+05
+The p value is < 2.2e-16.
+We reject the null at alpha = 0.01
+At least one variable is significant predictor of calories.
+
+
+**(b)**
+```{r}
+summary(calor2)
+
+```
+For Carbs:
+null hypothesis: This is not a significant Predictor B1=0
+alternative hypothesis: B1 != 0
+The test stat is 388.717
+The p value is < 2e-16
+We reject the null
+
+For Sodium:
+null hypothesis: This is not a significant Predictor B2=0
+alternative hypothesis: B2 != 0
+The test stat is 1.363
+The p value is 0.173    
+We fail to reject the null
+
+For Fat:
+null hypothesis: This is not a significant Predictor B3=0
+alternative hypothesis: B3 != 0
+The test stat is 575.262  
+The p value is < 2e-16
+We reject the null
+
+For protein:
+null hypothesis:This is not a significant Predictor B4=0
+alternative hypothesis: B4 != 0
+The test stat is 150.533  
+The p value is < 2e-16
+We reject the null
+
+**(c)**
+No, this model is not very good because sodium docent appear to be a significant predictor. The original fat, protein, and carbs was better because all were significant predictors. 
+
+## Exercise 3 (Comparing Models)
+**(a)**
+```{r}
+
+goalies = read.csv("goalies_cleaned.csv")
+goal = lm(W ~ GA + SA + SV + SV_PCT + GAA + SO + MIN + PIM,data = goalies)
+
+summary(goal)
+
+```
+The null is that no variables are significant, the alternative is at at least one is significant.
+The tests stat is 3938
+The p value < 2.2e-16
+We reject the null
+At least one variable is significant predictor of wins.
+
+**(b)**
+```{r}
+sqrt(mean(resid(goal) ^ 2))
+
+```
+The residual standard error is 12.52. The RMSE is 12.3962. The residual standard error accounts for degrees of freedom but they both do the same thing.
+
+
+**(c)**
+```{r}
+goalc = lm(W ~ GA + GAA + SV + SV_PCT,data = goalies)
+
+# summary(goalc)
+sqrt(mean(resid(goalc) ^ 2))
+
+```
+
+RMSE is 25.12237
+**(d)**
+```{r}
+goald = lm(W ~ GAA + SV_PCT ,data = goalies)
+
+# summary(goald)
+sqrt(mean(resid(goald) ^ 2))
+
+```
+RMSE is 102.8307
+
+
+The model in A is the most accurate it seems. It has the lowest residual error so youre likely to get a better prediction.
+
+
+
+**(f)**
+```{r}
+
+anova(goalc, goald)
+```
+Null:the mean  is the same for all groups. 
+Alt: The mean is not the same for all groups
+The test stat is 3599.8
+The p value < 2.2e-16
+WE reject the null
+One model is better than the other at predicting wins
+
+
+## Exercise 4 (Regression without `lm`)
+**(a)**
+```{r}
+library(faraway)
+asdf = nrow(prostate)
+x = as.matrix(cbind(rep(1, asdf), 
+                    prostate$lcavol, 
+                    prostate$lweight, 
+                    prostate$age, 
+                    prostate$lbph, 
+                    prostate$svi, 
+                    prostate$lcp, 
+                    prostate$gleason, 
+                    prostate$pgg45))
+y = prostate$lpsa
+
+beta_hat_no_lm = as.vector(solve(t(x) %*% x) %*% t(x) %*% y)
+beta_hat_no_lm
+sum(beta_hat_no_lm)
+
+```
+
+
+**(b)**
+```{r}
+pros_mod = lm(lpsa ~ .,data = prostate)
+beta_hat_lm = as.vector(coef(pros_mod))
+beta_hat_lm
+sum(beta_hat_lm)
+```
+**(c)**
+```{r}
+all.equal(beta_hat_lm, beta_hat_no_lm)
+
+```
+
+
+
+

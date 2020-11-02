@@ -1,0 +1,324 @@
+---
+title: "hw03_jrhaag2"
+author: "Jeffery Haag"
+date: "9/28/2020"
+output:
+  html_document:
+    theme: readable
+    toc: yes
+---
+## Exercise 1 (Using `lm`)
+**(a)**
+```{r}
+faithful_model = lm(eruptions ~ waiting, data = faithful)
+# plot(eruptions ~ waiting, data = faithful)
+# abline(faithfulModel1, lwd = 3)
+summary(faithful_model)
+```
+**(b)**
+```{r}
+coef(faithful_model)
+beta_0 = -1.87401599
+beta_1_hat = 0.07562795 
+```
+The Bnot is -1.86402 and Bhat1 is 0.07563. I interpret this to mean that the longer you wait there will be a longer eruption. I interprety the y intercept to mean that a wait time of 0 or very low is impossible or extremely improbable, because a neagtive eruption time isn't really possible.
+
+**(c)**
+```{r}
+pred80 = beta_1_hat * 80 + beta_0
+print(pred80)
+# View(faithful)
+
+```
+The prediction is 4.17. I'm not very confident because I looked at the data and there are several data points for 80. Most of them are pretty far off with the closest being 4.3 which is both pretty far off. Most are much bigger with only one smaller than the prediction.
+
+**(d)**
+```{r}
+pred120 = beta_1_hat * 120 + beta_0
+print(pred120)
+# View(faithful)
+
+```
+The prediction is 7.2. Im not very confident because that wait time is much larger than any other data point and I would not expect old faithful eruption time to scale infinitely with wait time. It appears around five is the peak eruption time.
+
+**(e)**
+```{r}
+rssFaithful = sum(resid(faithful_model)^2)
+rssFaithful
+```
+**(f)**
+```{r}
+plot(eruptions ~ waiting, data = faithful,
+     xlab = "time to wait(minutes)",
+     ylab = "time of eruption(minutes)",
+     main = "Eruption time vs wait time")
+abline(faithful_model, lwd = 2, col = "red")
+```
+**(g)**
+```{r}
+sse = sum((fitted(faithful_model) - mean(faithful$eruptions))^2)
+ssr = sum((fitted(faithful_model) - faithful$eruptions)^2)
+rsquared = 1 - (ssr/(sse + ssr))
+
+print(rsquared)
+
+```
+## Exercise 2 (Writing Functions)
+**(a)**
+```{r}
+get_sd_est = function(model_resid, mle = FALSE)
+{
+  if (!mle)
+  {
+    n = length(model_resid)
+    s2_e = sum(model_resid^2) / (n - 2)
+    s2_e = sqrt(s2_e)
+  }
+  else
+  {
+    sd = (mean(model_resid^2))^0.5
+    
+  }
+}
+
+```
+**(b)**
+```{r}
+ansb  = get_sd_est(resid(faithful_model), FALSE)
+ansb
+```
+**(c)**
+```{r}
+ansc  = get_sd_est(resid(faithful_model), TRUE)
+ansc
+```
+**(d)**
+```{r}
+summary(faithful_model)$sigma
+```
+## Exercise 3 (Simulating SLR)
+**(a)**
+```{r}
+birthday = 19991008
+set.seed(birthday)
+
+x = runif(n = 50, 0, 10)
+
+sim_slr = function(x, beta_0 = 3, beta_1 = -7, sigma = 2) {
+  n = length(x)
+  epsilon = rnorm(n, mean = 0, sd = sigma)
+  y = beta_0 + beta_1 * x + epsilon
+  data.frame(predictor = x, response = y)
+}
+
+
+data_sim = sim_slr(x)
+
+
+```
+**(b)**
+```{r}
+fitModel = lm(response ~ predictor, data = data_sim)
+# plot(eruptions ~ waiting, data = faithful)
+# abline(faithfulModel1, lwd = 3)
+coef(fitModel)
+```
+Pretty close to what I would expect with intercept of 2.87 and predictor of -6.98. I would think maybe a little bit closer considering 50 is a pretty large set.
+
+**(c)**
+```{r}
+
+plot(response ~ predictor, data = data_sim,
+     xlab = "x",
+     ylab = "y",
+     main = "Y vs X")
+abline(fitModel, lwd = 3)
+
+```
+**(d)**
+```{r}
+
+beta_hat_1 = rep(0, 2000)
+
+for (i in 0:2000)
+{
+  data_sim_temp = sim_slr(x)
+  fitModel_temp = lm(response ~ predictor, data = data_sim_temp)
+  beta_hat_1[i] = coef(fitModel_temp)[2]
+  
+}
+
+```
+**(e)**
+```{r}
+
+beta_hat_1_mean = mean(beta_hat_1)
+beta_hat_1_sd = sd(beta_hat_1) 
+
+beta_hat_1_mean
+beta_hat_1_sd
+```
+Yes the mean is almost exactly the predictor.
+
+**(f)**
+```{r}
+
+histobaby = hist(beta_hat_1,
+     xlab = "beta_1_hat",
+     ylab = "Occurences",
+     main = "Occurences of each beta_hat")
+
+
+```
+## Exercise 4 (Be a Skeptic)
+
+**(a)**
+```{r}
+
+
+birthday = 19991008
+set.seed(birthday)
+
+x = runif(n = 25, 0, 10)
+
+sim_slr_4 = function(x, beta_0 = 10, beta_1 = 0, sigma = 1) {
+  n = length(x)
+  epsilon = rnorm(n, mean = 0, sd = sigma)
+  y = beta_0 + beta_1 * x + epsilon
+  data.frame(predictor = x, response = y)
+}
+
+
+data_sim_4 = sim_slr_4(x)
+
+beta_hat_1 = rep(0, 1500)
+
+for (i in 0:2000)
+{
+  data_sim_temp = sim_slr_4(x)
+  fitModel_temp = lm(response ~ predictor, data = data_sim_temp)
+  beta_hat_1[i] = coef(fitModel_temp)[2]
+  
+}
+
+
+```
+**(b)**
+```{r}
+
+histobaby = hist(beta_hat_1,
+     xlab = "beta_1_hat",
+     ylab = "Occurences",
+     main = "Occurences of each beta_hat")
+
+
+```
+It looks pretty normal, about what I would expect for random simulation
+
+**(c)**
+```{r}
+
+skeptic = read.csv("skeptic.csv")
+
+fitLine = lm(response ~ predictor, data = skeptic)
+coef(fitLine)
+beta_hat_1_4c = coef(fitLine)[2]
+beta_hat_1_4c
+```
+**(d)**
+```{r}
+
+histobaby2 = hist(beta_hat_1,
+     xlab = "beta_1_hat",
+     ylab = "Occurences",
+     main = "Occurences of each beta_hat")
+
+abline(v = beta_hat_1_4c, col = "red")
+
+```
+**(e)**
+```{r}
+
+prop = length(which(beta_hat_1 > beta_hat_1_4c))
+prop/length(beta_hat_1)
+prop*2/length(beta_hat_1)
+
+```
+**(f)**
+
+No I do not, 2% is pretty incredible rare and as we did before even if its two sided, it still passes the 0.05 test and we can reject the null(Null being that its randomly generated).
+
+## Exercise 5 (Comparing Models)
+
+**(a)**
+```{r}
+
+nhl = read.csv("goalies.csv")
+
+rmse2 = function(y)
+{
+  n = length(y)
+  ans = resid(y)^2
+  ans = sum(ans)/n
+  ans = sqrt(ans)
+  return(ans)
+}
+plot(W ~ MIN, data = nhl, col = "blue")
+fit5a = lm(W ~ MIN, data = nhl)
+abline(fit5a, col = "red")
+rmse2(fit5a)
+
+```
+**(b)**
+```{r}
+
+
+plot(W ~ GA, data = nhl, col = "blue")
+fit5b = lm(W ~ GA, data = nhl)
+abline(fit5b, col = "red")
+rmse2(fit5b)
+
+```
+**(c)**
+```{r}
+
+
+plot(W ~ SO, data = nhl, col = "blue")
+fit5c = lm(W ~ SO, data = nhl)
+abline(fit5c, col = "red")
+rmse2(fit5c)
+
+```
+The model in A is the best because it has the lowes RMSE and therefore the lowest error in the linear model.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

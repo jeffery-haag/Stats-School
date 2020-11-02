@@ -1,0 +1,187 @@
+---
+title: 'STAT 420: Homework 06_jrhaag2'
+author: "Jeffery Haag"
+date: 'Due: Tuesday, October 20 by 11:30 PM CT'
+output:
+  html_document:
+    theme: readable
+    toc: yes
+---
+
+
+## Exercise 1 (Regression for Explanation)
+```{r}
+library(faraway)
+
+prostateAll = lm(lpsa ~ pgg45 + gleason + lcp + svi + lbph + age + lweight + lcavol, data = prostate)
+prostate2 = lm(lpsa ~ lcavol, data = prostate)
+prostate3 = lm(lpsa ~ lcavol + lbph, data = prostate)
+prostate4 = lm(lpsa ~ lcavol + lbph + svi, data = prostate)
+prostate5 = lm(lpsa ~ lcavol + lbph + svi + pgg45 , data = prostate)
+
+anova(prostate2, prostate3)
+anova(prostate3, prostate4)
+anova(prostate4, prostate5)
+anova(prostate5, prostateAll)
+
+
+
+```
+
+I made 3 more models adding one variable each time so I could easily compare them.I Started with the simplest model, prostate2 which just uses LCAVOl as a predictor, I then did anova at alpha =0.05 test with prostate3(lpsa ~ lcavol + lbph). The p value is 0.02093  so I reject the null and the predictor I added is probably good. I compare prostate3 to prostate4, using anova and get a p value of 0.0008039 so i reject the null.I then do prostate5 and get a pvalue of 0.568 so this variable is probably not a good predictor so I stop. So the best one I got was prostate4 which is prostate4 = lm(lpsa ~ lcavol + lbph + svi, data = prostate)
+
+
+
+## Exercise 2 (Regression for Prediction)
+
+
+```{r}
+library(MASS)
+
+rmse = function(real, predicted) 
+  {
+  inter = (real - predicted) ^ 2
+  sqrt(mean(inter))
+}
+
+
+
+
+set.seed(42)
+train_index = sample(1:nrow(Boston), 400)
+train  = Boston[train_index, ]
+test = Boston[-train_index, ]
+
+  
+bostonAll = lm(medv ~ ., data = Boston)
+boston1 = lm(medv ~ crim, data = Boston)
+boston2 = lm(medv ~ crim + black, data = Boston)
+boston3 = lm(medv ~ crim + black + rm, data = Boston)
+boston4 = lm(medv ~ crim + black + rm + age, data = Boston)
+
+
+print("Training: Model1")
+train1 = rmse(train$medv, predict(boston1, train))
+train1
+print("Test: Model1")
+test1 = rmse(test$medv, predict(boston1, test))
+test1
+
+
+print("Training: Model2")
+train1 = rmse(train$medv, predict(boston2, train))
+train1
+print("Test: Model2")
+test1 = rmse(test$medv, predict(boston2, test))
+test1
+
+print("Training: Model3")
+train1 = rmse(train$medv, predict(boston3, train))
+train1
+print("Test: Model3")
+test1 = rmse(test$medv, predict(boston3, test))
+test1
+
+
+print("Training: Model4")
+train1 = rmse(train$medv, predict(boston4, train))
+train1
+print("Test: Model4")
+test1 = rmse(test$medv, predict(boston4, test))
+test1
+
+
+print("Training: ModelAll")
+train1 = rmse(train$medv, predict(bostonAll, train))
+train1
+print("Test: ModelAll")
+test1 = rmse(test$medv, predict(bostonAll, test))
+test1
+
+```
+THe model which includes all the predictor variables is the best model. It has the lowoest Training RMSE and the lowest Test RMSE values. THe model with all vriables is best.
+
+
+## Exercise 3 (Simulating Multiple Regression)
+
+
+**(a)** 
+
+```{r}
+set.seed(42)
+n = 25
+
+x0 = rep(1, n)
+x1 = runif(n, 0, 10)
+x2 = runif(n, 0, 10)
+x3 = runif(n, 0, 10)
+x4 = runif(n, 0, 10)
+X = cbind(x0, x1, x2, x3, x4)
+C = (t(X) %*% X)^-1
+y = rep(0, n)
+ex_4_data = data.frame(y, x1, x2, x3, x4)
+
+diagnol = diag(C)
+row10 = ex_4_data[10,]
+print(diagnol)
+print(row10)
+
+```
+
+**(b)** 
+```{r}
+beta_hat_1 =  rep(0,1500)
+beta_2_pval =  rep(0,1500)
+beta_3_pval =  rep(0,1500)
+
+```
+**(c)** 
+```{r}
+
+
+for (i in 1:1500)
+{
+  sim = rnorm(n, mean = 0 , sd = 4)
+  newy = 2*x0 + 3*x1 + 4*x2 + 0 + x4 + sim
+  ex_4_data$y = newy
+  regress = lm(y ~ .,data = ex_4_data)
+  beta_hat_1[i]  = coef(regress)[2]
+  beta_2_pval[i] = 2 * summary(regress)$coefficients[3,4]  
+  beta_3_pval[i] = 2 * summary(regress)$coefficients[4,4]  
+  
+}
+
+
+```
+**(d)** 
+Beta1 should be 3 because its given and variance should be 0 because we set it in the simulations
+
+
+**(e)**
+```{r}
+print("mean:")
+mean(beta_hat_1)
+print("var:")
+var(beta_hat_1)
+
+hist(beta_hat_1, prob = TRUE)
+curve(dnorm(x, mean = 3, sd = sqrt(16 * C[2,2])), col = "blue", add = TRUE)
+```
+Yes these values are pretty close.
+
+
+**(f)**
+```{r}
+mean(beta_3_pval < 0.05)
+
+```
+I honestly expected it to be lower given theirs no way beta3 is significant at 0, it is pretty low though so I guess it's ok.
+
+
+**(g)**
+```{r}
+mean(beta_2_pval < 0.05)
+
+```
+
+I very much expected this to be very high because 4 is a very signifigant coeffecient for the model. It makes sense this is very close to 1

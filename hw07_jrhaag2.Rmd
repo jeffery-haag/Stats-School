@@ -1,0 +1,229 @@
+---
+title: 'STAT 420: Homework 07'
+author: "Jeffery Haag"
+date: '10/26/2020 A.D.'
+output:
+  html_document:
+    theme: readable
+    toc: yes
+---
+
+
+# Assignment
+
+## Exercise 1 (Brand Rankings)
+
+
+```{r}
+cookies = read.csv("cookies.csv")
+boxplot(rating ~ brand, data = cookies)
+cookies_anova =aov(rating ~ brand, data = cookies)
+summary(cookies_anova)
+
+cook = data.frame(brand = unique(cookies$brand))
+data.frame(cook, rating = predict(cookies_anova, cook))
+
+TukeyHSD(cookies_anova, conf.level = 0.95)
+
+```
+
+There is definitely a difference between all three at alpha = 0.0864 for the three way. When i find the sample means 
+of A and B to be very close. When I run a test we find that at alpha =0.1 that we can say C-B(reject null) are difference but that's all. I'd go with c just going off the boxplots and mean.
+
+
+## Exercise 2 (Concrete Strength)
+```{r}
+concrete <- read.csv("concrete.csv")
+
+
+summary(aov(strength ~ curing * cement, data = concrete))
+summary(aov(strength ~ curing + cement, data = concrete))
+```
+
+The p value for curing:cement is very weak which means we dont reject the null so we choose an additive model.
+
+
+```{r}
+concreteAdd = aov(strength ~ curing + cement, data = concrete)
+concreteTable = expand.grid(curing = unique(concrete$curing), cement = unique(concrete$cement))
+get_est_means = function(model,table) {
+  mat = matrix(predict(model, table), nrow = 4, ncol = 3, byrow = TRUE)
+  colnames(mat) = c("I", "II", "III")
+  rownames(mat) = c("A", "B", "C", "D")
+  mat
+}
+
+knitr::kable(get_est_means(model = concreteAdd, table = concreteTable))
+```
+
+```{r}
+
+par(mfrow = c(1, 2))
+with(concrete, interaction.plot(curing, cement, strength))
+with(concrete, interaction.plot(cement, curing, strength))
+
+
+```
+
+
+On the plots there isnt any corssing but theyre still not parralel, overall I think the additive model is probablyu correct.
+
+
+## Exercise 3 (Weight Gain)
+
+```{r}
+
+rats <- read.csv("rat_wt.csv")
+
+summary(aov(gain~source * protein, data = rats))
+
+```
+
+The source:protein passes alpha = 0.1 so we can reject null and say its interactive.
+
+
+```{r}
+ratsI= aov(gain ~ source * protein, data = rats) # interaction model
+get_est_means = function(model,table) {
+  mat = matrix(predict(model, table), nrow = 2, ncol = 3, byrow = TRUE)
+  colnames(mat) = c("pork", "cereal", "beef")
+  rownames(mat) = c("high", "low")
+  mat
+}
+ratsT = expand.grid(source = unique(rats$source), protein = unique(rats$protein))
+knitr::kable(get_est_means(model=ratsI,table=ratsT))
+```
+
+
+```{r}
+par(mfrow = c(1, 2))
+with(rats, interaction.plot(source, protein, gain))
+with(rats, interaction.plot(protein, source, gain))
+```
+
+
+Here we have some hardcore crossing of the lines while going in different directions on both plots. Definitely Interaction makes sense.
+
+
+## Exercise 4 (Sample Size, Power)
+
+
+
+```{r}
+birthday = 19991008
+set.seed(birthday)
+
+
+func4 =function(n,mu_a = -1,mu_b =0,mu_c = -1,sigma =1) {
+
+    sim_data =data.frame(response =c(rnorm(n =n,mean =mu_a,sd =sigma),
+                                 rnorm(n =n,mean =mu_b,sd =sigma),
+                                 rnorm(n =n,mean =mu_c,sd =sigma)),
+    group =c(rep("A",times =n),rep("B",times =n),rep("C",times =n)))
+    
+    aov_results =aov(response~group,data =sim_data)
+    p_val=summary(aov_results)[[1]][["Pr(>F)"]]
+    # print(p_val)
+    return(p_val)
+    
+    
+  }
+    y = c(0)
+    count = 0
+    for(i in 2:1000){
+      count = 0
+      p_vals = replicate(n =500, func4(n=i))
+      passed = p_vals < 0.05
+      passed = passed[!is.na(passed)]
+      
+      count = mean(passed)
+      y = c(y, count)
+      if(count > 0.9){
+        print(i)
+        break
+      }
+      
+    }
+
+plot(y, xlab = "Sample Size", ylab = "POWER")
+  
+
+```
+
+
+To be honest I'm not super confident on this one but I think a sample size of 20 will work best.
+
+
+## Exercise 5 (Balanced Design, Power)
+
+
+```{r}
+birthday = 19991008
+set.seed(birthday)
+
+
+func5 = function(mu_a = 0,mu_b = 2, a, sigma =1) {
+    b =10 - a
+    
+    sim_data =data.frame(response =c(rnorm(n =a,mean =mu_a,sd =sigma),
+                                 rnorm(n =b,mean =mu_b,sd =sigma)),
+    group = c(rep("A",times = a),rep("B",times = b)))
+    
+    aov_results =aov(response~group,data = sim_data)
+    p_val=summary(aov_results)[[1]][["Pr(>F)"]]
+    return(p_val)
+  
+}
+
+  mean_p_vals = rep(0,9)
+      
+  x = c(1,2,3,4,5,6,7,8,9)
+  for (val in x){
+    
+    p_vals = replicate(n = 700, func5(mu_a = 0,mu_b = 2, a = val, sigma =1))
+    asdf = p_vals < 0.05
+    clean = asdf[!is.na(asdf)]
+    ans = mean(clean)
+  
+
+    mean_p_vals[val] = ans
+  }
+  
+  
+  plot(mean_p_vals, main="Power vs Balance", xlab = "A", ylab = "Power")
+
+
+```
+
+
+So at balance(five for each) is the highest power. It isnt very symmetrical which I think is pretty weird though.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

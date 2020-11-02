@@ -1,0 +1,290 @@
+---
+title: 'STAT 420: Homework 08'
+author: "Jeffery Haag"
+date: '11/01/20 AD'
+output:
+  html_document:
+    theme: readable
+    toc: yes
+---
+
+## Exercise 1 (EPA Emissions Data)
+
+
+**(a)** 
+```{r}
+epa = read.csv("epa2015.csv")
+str(epa)
+epa$type = as.factor(epa$type)
+str(epa)
+```
+
+**(b)** 
+```{r}
+plot(CO2 ~ horse, data = subset(epa,type=="Both"), col ="black")
+points(CO2 ~ horse, data = subset(epa,type=="Truck"), col ="red")
+points(CO2 ~ horse, data = subset(epa,type=="Car"), col = "blue")
+
+
+```
+
+**(c)** 
+
+```{r}
+hoModel = lm(CO2 ~ horse, data=epa)
+plot(CO2 ~ horse, data = subset(epa,type=="Both"), col ="black")
+points(CO2 ~ horse, data = subset(epa,type=="Truck"), col ="red")
+points(CO2 ~ horse, data = subset(epa,type=="Car"), col = "blue")
+abline(hoModel, col = "green")
+
+coef(hoModel)["horse"]
+
+
+predict(hoModel, data.frame(horse=148), interval="confidence")
+
+```
+It models the data not so well, but the data doesn't look like it can be modeled well because there's just too much noise. It seems to mostly be following the car and not really the others as well. 
+The estimate is 0.5499 cO2/horsepower on average.
+
+The lower bound is 232.2978 and upper bound is 239.9082 co2 for the prediction on the Subaru Impreza Wagon.
+
+**(d)**
+
+```{r}
+co2Ad = lm(CO2~horse+type,data=epa)
+coef(co2Ad)
+addBoth = coef(co2Ad)[1]
+addCar = coef(co2Ad)[1] + coef(co2Ad)[3]
+addTruck = coef(co2Ad)[1] + coef(co2Ad)[4]
+avgSlope = coef(co2Ad)[2]
+
+
+plot(CO2 ~ horse, data = subset(epa,type=="Both"), col ="black")
+points(CO2 ~ horse, data = subset(epa,type=="Truck"), col ="red")
+points(CO2 ~ horse, data = subset(epa,type=="Car"), col = "blue")
+
+abline(addBoth, avgSlope, col ="black", lwd = 3)
+abline(addCar, avgSlope, col = "blue", lwd = 3)
+abline(addTruck, avgSlope, col ="red",lwd = 3)
+
+predict(co2Ad, data.frame(horse=148,type="Both"), interval="confidence") 
+```
+The lines are better like this because before it seemed to be skewed towards blue/car but now the trucks have a more accurate line.
+
+The estimate for avg Co2 change /horse is 40.0744433  for type truck
+The 95% confidence interval is 232.1156-245.9345 for the Subaru Impreza Wagon.
+
+**(e)** 
+
+```{r}
+co2Int = lm(CO2~horse*type,data=epa)
+coef(co2Int)
+
+intBoth = coef(co2Int)[1]
+intCar = coef(co2Int)[1] + coef(co2Int)[3]
+intTruck = coef(co2Int)[1] + coef(co2Int)[4]
+
+bothSl = coef(co2Int)[2]
+carSl = coef(co2Int)[2] + coef(co2Int)[5]
+truckSlo = coef(co2Int)[2] + coef(co2Int)[6]
+
+
+plot(CO2 ~ horse, data = subset(epa,type=="Both"), col ="black")
+points(CO2 ~ horse, data = subset(epa,type=="Truck"), col ="red")
+points(CO2 ~ horse, data = subset(epa,type=="Car"), col = "blue")
+
+abline(intBoth, bothSl, col ="black", lwd = 3)
+abline(intCar, carSl, col = "blue", lwd = 3)
+abline(intTruck, truckSlo, col ="red",lwd = 3)
+
+predict(co2Int, data.frame(horse=148,type="Both"), interval="confidence") 
+  
+```
+The lines are better like this, red seems to be way better off and blue a bit better as well.
+
+The estimate for avg Co2 change /horse is 7.66403763  for type truck 
+The 95% confidence interval is 223.4375 249.8304 for the Subaru Impreza Wagon.
+
+
+
+**(f)** 
+I personally think the third one is the best(the interaction model). It still isn't that great, but its the best of the three.
+
+
+**(g)** 
+```{r}
+
+anova(hoModel, co2Ad)
+
+```
+At alpha=0.01 this passes the p test so the additive is going to be the better model.
+
+
+**(h)** 
+
+```{r}
+anova(hoModel, co2Int)
+```
+At alpha =0.01 it passes the p test so the interactive model is going to be the best one like I predicted, Booyakasha
+
+
+## Exercise 2 (Hospital SUPPORT Data)
+
+**(a)** 
+```{r}
+
+hos = read.csv("hospital.csv")
+str(hos)
+hos$Care = as.factor(hos$Care)
+hos$Race = as.factor(hos$Race)
+str(hos)
+
+
+
+```
+**(b)**
+```{r}
+hoAdd = lm(Days~Charges+Pressure+Care+Race,data=hos)
+summary(hoAdd)
+```
+For care the base is low and for race it's white.
+
+**(c)**
+```{r}
+
+hoC = lm(Days~Charges+Pressure+Care+Race+Care*Charges+Care*Pressure,data=hos)
+anova(hoAdd,hoC)
+```
+At alpha =0.01 we can reject the null and the new model is going to bet better I think.
+
+
+**(d)** 
+```{r}
+hoD = lm(Days~Charges+Pressure+Care+Race+Care*Charges+Care*Pressure+ Race*Charges+Race*Pressure,data=hos)
+anova(hoC,hoD)
+
+```
+At alpha =0.01 we can reject the null and the new model is going to bet better I think. That is with race being interactive.
+
+
+**(e)** 
+```{r}
+coef(hoD)["Pressure"]+coef(hoD)["Pressure:Racewhite"]
+```
+We predict 0.1424 increase for a 1 unit increase. 
+
+
+**(f)** 
+```{r}
+hoF = lm(Days~Charges+Care+Race+Care*Charges+Race*Charges,data=hos)
+anova(hoD,hoF)
+```
+
+## Exercise 3 (Fish Data)
+
+**(a)**
+```{r}
+fishies = read.csv("fish.csv")
+fish1 = lm(Weight ~ Length1*HeightPct*WidthPct,data=fishies)
+```
+**(b)** 
+
+```{r}
+fish_smaller = lm(Weight ~ Length1 + HeightPct * WidthPct, data = fishies)
+anova(fish1, fish_smaller)
+```
+The null is that beta4=beta5=beta7=0
+The alternate is that one of them isn't 0
+The test stat is 16.367 
+The p value is 2.972e-09
+We reject the null and i prefer the new smaller model
+
+
+**(c)** 
+```{r}
+coef(fish1)
+ansc = 101.8805390 + -4.2017983 *20 +  -6.3483423*10 +0.3512455 *20*10
+ansc
+```
+**(d)** 
+```{r}
+coef(fish_smaller)
+
+
+ansd = 31.485216
+```
+We expect 31.485 weight gain.
+
+
+## Exercise 4 ($t$-test Is a Linear Model)
+
+
+```{r}
+n = 16
+
+ex4 = data.frame(
+  groups = c(rep("A", n / 2), rep("B", n / 2)),
+  values = rep(0, n))
+str(ex4)
+```
+
+
+
+```{r}
+ex4$values = rnorm(n, mean = 10, sd = 3) # simualte data
+summary(lm(values ~ groups, data = ex4))
+t.test(values ~ groups, data = ex4, var.equal = TRUE)
+```
+
+
+
+```{r}
+num_sims = 100
+lm_t = rep(0, num_sims)
+lm_p = rep(0, num_sims)
+tt_t = rep(0, num_sims)
+tt_p = rep(0, num_sims)
+```
+
+
+
+**(a)** 
+```{r}
+UIN = 673856275
+set.seed(UIN)
+for (i in 1:100) {
+  ex4$values = rnorm(n, mean = 10, sd = 3)
+  lm_t[i] = summary(lm(formula = values ~ groups, data = ex4))$coefficients[2,3]
+  lm_p[i] = summary(lm(formula = values ~ groups, data = ex4))$coefficients[2,4]
+  tt_t[i] = t.test(values ~ groups, data = ex4, var.equal = TRUE)$stat
+  tt_p[i] = t.test(values ~ groups, data = ex4, var.equal = TRUE)$p.val
+}
+```
+
+**(b)** 
+```{r}
+
+mean(lm_t == tt_t)
+```
+0.99
+
+
+**(c)** 
+```{r}
+ mean(lm_p == tt_p)
+
+```
+0.99
+
+
+**(d)** 
+```{r}
+all.equal(lm_p, tt_p)
+```
+Theyre equal. They are equivalent theres just a slight computer issue with checking it.
+**(e)** 
+```{r}
+lm_t
+tt_t
+```
+The values in tt_t and lm_t are negatives of each other. Yes we calculate the two with the difference between means as a facotr and they are reversed for the two values so we get the negatives of each other.ex(a-b) vs (b-a).
