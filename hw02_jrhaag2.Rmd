@@ -1,0 +1,189 @@
+---
+title: "hw02_jrhaag2"
+author: "Jeffery Haag"
+date: "9/21/2020"
+output:
+  html_document:
+    theme: readable
+    toc: yes
+---
+
+## Exercise 1 (Writing Simple Functions)
+```{r}
+a = 1:10
+b = 10:1
+c = rep(1, times = 10)
+d = 2 ^ (1:10)
+```
+
+**(a)**
+```{r}
+sum_of_squares=function(x)
+{
+  answA = sum(x^2);
+  return(answA)
+}
+print(sum_of_squares(x = a))
+print(sum_of_squares(x = c(c, d)))
+```
+**(b)**
+```{r}
+sum_of_power=function(x, p = 2)
+{
+  answB = sum(x^p);
+  return(answB)
+}
+print(sum_of_power(x = a))
+print(sum_of_power(x = a, p = 3))
+print(sum_of_power(x = a, p = a))
+print(sum_of_power(x = a, p = c(1, 2)))
+
+```
+**(c)**
+```{r}
+rms_diff=function(x, y)
+{
+  answC = (sum((x-y)^2)/length(x))^0.5;
+  return(answC)
+}
+
+rms_diff(x = a, y = b)
+rms_diff(x = d, y = c)
+rms_diff(x = d, y = 1)
+rms_diff(x = a, y = 0) ^ 2 * length(a)
+
+```
+## Exercise 2 (Plotting, Testing)
+**(a)**
+```{r}
+library(readr)
+intelligence = read_csv("intelligence.csv");
+```
+**(b)**
+```{r}
+boxplot(iq ~ town,data = intelligence,
+main = "IQ in Pawnee vs Eagleton",
+xlab = "IQ",
+ylab = "IQ"
+)
+```
+**(c)**
+```{r}
+t.test(iq ~ town, data = intelligence, alternative = "greater", conf.level = 0.90);
+```
+p-value is 0.3424. We do not have evidence to reject the null, so we can't say eagleton is smarter than Pawnee.
+**(d)**
+```{r}
+t.test(iq ~ town, data = intelligence, alternative = "two.sided", conf.level = 0.90);
+```
+What changes now is they're testing to see if either one city or the other has higher iq(significantly). This doubles the p value because we are unsure of which is going to be highter. Like before we can't reject the null.
+## Exercise 3 (Writing More Functions)
+**(a)**
+```{r}
+do_t_test = function(x, mu = 0)
+{
+  t_score6969 = (mean(x)-mu)/(sd(x)/length(x)^.5)
+  # print(t_score)
+  p_val6969 = 2 * pt(t_score6969, df = length(x)-1, lower.tail = TRUE, log.p = FALSE)
+  # print(p_val)
+  ans3c = c(t_score6969, p_val6969)
+  return(ans3c);
+}
+
+```
+**(b)**
+```{r}
+make_decision = function(pval, alpha = 0.05)
+{
+  if (pval <= alpha)
+    return("Reject!")
+  else return("Fail to Reject.")
+  
+}
+
+```
+**(c)**
+```{r}
+set.seed(114)
+y = rnorm(25, 1.4, 1)
+pval = do_t_test(y, mu = 2)[2]
+pval
+make_decision(pval, alpha = 0.10)
+```
+## Exercise 4 (CLT Simulation)
+
+**(a)**
+```{r}
+birthday = 19991008
+set.seed(birthday)
+```
+**(b)**
+```{r}
+samples = 10000
+x_avg = rep(0, samples)
+for(i in 1:samples)
+{
+  x_avg[i] = mean(x = rpois(5, 2))
+}
+b_histogram = hist(x_avg,
+main = "10,000 samples of 5 random Dist",
+xlab = "Mean of sample dist.",
+ylab = "Occurences")
+
+```
+I think it does obey the central limit theorem because it appears to be pretty normal, with alot in the middle and less moving out
+**(c)**
+```{r}
+samples = 10000
+x_avg = rep(0, samples)
+for(i in 1:samples)
+{
+  x_avg[i] = mean(x = rpois(100, 2))
+}
+c_histogram = hist(x_avg,
+main = "10,000 samples of 100 poisson Dist",
+xlab = "Mean of sample dist.",
+ylab = "Occurences")
+
+```
+I think it does obey the central limit theorem because it appears to be very normal. This one is basicly a piteresque normal dist.
+**(d)**
+```{r}
+sim_xbars_exp = function(samples, sample_size, lambda)
+{
+  x_avg = rep(0, samples)
+  for(i in 1:samples)
+{
+  x_avg[i] = mean(x = rpois(sample_size, lambda))
+  }
+  return(x_avg)
+}
+spec = sim_xbars_exp(25000,50, 3)
+d_histogram = hist(spec,
+main = "25,000 samples of 50 poisson Dist",
+xlab = "Mean of sample dist.",
+ylab = "Occurences")
+
+```
+## Exercise 5 (More Simulation)
+```{r}
+birthday = 19991008
+set.seed(birthday)
+
+find_stat = function()
+{
+  stat = sd((rexp(10, 2)))/mean(rpois(5, 3))
+}
+# x = replicate(5000, sd(rexp(10, 2)))
+# y = replicate(5000, mean(rpois(5, 3))) 
+ans = replicate(5000, find_stat(),simplify = "array")
+five_histogram = hist(ans,
+main = "Sampling Dist of poisson statistic",
+xlab = "Value of poisson stat",
+ylab = "Occurences")
+```
+
+
+
+
+
